@@ -1,4 +1,4 @@
-# Flights management system
+# Flights Management System
 
 
 First project with little experience with C language.
