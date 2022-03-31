@@ -1,3 +1,9 @@
+/*
+*File: proj.c
+*Author: Afonso Palmeira 102696
+*Description: A program to manage comercial flights in C.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -10,42 +16,103 @@
 #define L_ID 6
 #define A 150
 #define AIRPLISTMAX 200
+#define FLIGHTLISTMAX 30000
+#define FLIGHTCODEMAX 7
 
-struct airport
-{
+/*Verificar o tamanho do ID*/
+
+struct airport{
     char ID[5];
     char country[32];
     char city[52];
     int flights_number;
 };
 
+struct flight{
+    char CODE[FLIGHTCODEMAX];
+    char ID_dep[5];
+    char ID_arr[5];
+    int d_day, d_month, d_year;
+    int d_hour, d_min;
+    int dur_h, dur_min;
+    int capacity;
+};
+
 int airp_number = 0;
+int flights_number = 0;
+int iday = 1;
+int imonth = 1;
+int iyear = 2022;
 struct airport max_air[AIRPORTMAX];
+struct flight max_flights[FLIGHTLISTMAX];
+
+int invalid_date(int nday, int nmonth, int nyear){
+    if (nyear < iyear){
+        printf("invalid date\n");
+        return 1;
+    }
+    if ((nyear == iyear) && (nmonth < imonth)){
+        printf("invalid date\n");
+        return 1;
+    }
+    if (nmonth == imonth){
+        if (nday < iday){
+            printf("invalid date\n");
+            return 1;
+        } 
+    }
+    if ((nyear == (iyear + 1)) && (nmonth > imonth)){
+        printf("invalid date\n");
+        return 1;
+    }
+    if ((nyear == (iyear + 1)) && (nmonth == imonth) && (nday > iday)){
+        printf("invalid date\n");
+        return 1;
+    }
+return 0;
+}
+
+void no_such(char narr_airID[5], char ndep_airID[5]){
+    int i, checker1 = 0, checker2 = 0; 
+    for (i = 0; i < airp_number; i++){
+        if (strcmp(narr_airID, max_air[i].ID) == 0){
+            checker1 ++;
+        }
+        if (strcmp(ndep_airID, max_air[i].ID) == 0){
+            checker2 ++;
+        }    
+    }
+    if (checker1 == 0){
+        printf("%s: no such airport ID\n", narr_airID);
+        return;
+    }
+    if (checker2 == 0){
+        printf("%s: no such airport ID\n", ndep_airID);
+        return;
+    }
+}
 
 void comm_a(char new_airpID[L_ID], char new_ctry[L_COUNTRY], char new_city[L_CITY])
 {
     int i, j;
-    if (airp_number >= 40)
-    {
-        puts("too many airports\n");
+    /*check for errors*/
+    if (airp_number >= 40){
+        printf("too many airports\n");
         return;
     }
-    for (i = 0; i < 3; i++)
-    {
-        if (islower(new_airpID[i]))
-        {
-            puts("invalid airport ID\n");
+    for (i = 0; i < 3; i++){
+        if (islower(new_airpID[i])){
+            printf("invalid airport ID\n");
             return;
         }
     }
-    for (j = 0; j < airp_number; j++)
-    {
-        if (strcmp((max_air[j].ID), new_airpID) == 0)
-        {
-            puts("duplicate airport\n");
+    for (j = 0; j < airp_number; j++){
+        if (strcmp((max_air[j].ID), new_airpID) == 0){
+            printf("duplicate airport\n");
             return;
         }
     }
+    /*if no errors continue*/
     strcpy(max_air[airp_number].ID, new_airpID);
     strcpy(max_air[airp_number].country, new_ctry);
     strcpy(max_air[airp_number].city, new_city);
@@ -58,24 +125,20 @@ void comm_l_listed(char airp_list[AIRPLISTMAX], int airp_number)
     int i, j, checker = 0;
 
     char *ID = strtok(airp_list, " ");
-    while (ID != NULL)
-    {
-        for (j = 0; j < airp_number; j++)
-        {
-            if (strcmp(max_air[j].ID, ID) == 0)
-            {
+    while (ID != NULL){
+        /* check for errors*/
+        for (j = 0; j < airp_number; j++){
+            if (strcmp(max_air[j].ID, ID) == 0){
                 checker += 1;
             }
         }
-        if (checker == 0)
-        {
+        if (checker == 0){
             printf("%s: no such airport ID\n", ID);
         }
         checker = 0;
-        for (i = 0; i < airp_number; i++)
-        {
-            if (strcmp(max_air[i].ID, ID) == 0)
-            {
+        /*if no errors continue and prints all the airports and the rest of their struct with the specific order of IDs given by the user*/
+        for (i = 0; i < airp_number; i++){
+            if (strcmp(max_air[i].ID, ID) == 0){
                 printf("%s %s %s %d\n", max_air[i].ID, max_air[i].city, max_air[i].country, max_air[i].flights_number);
             };
         }
@@ -90,17 +153,15 @@ void comm_l_empty(int airp_number)
     int ids[AIRPORTMAX] = {0};
     char temp[4] = {0};
     int x;
-    for (i = 0; i < airp_number; i++)
-    {
+    /*creates an array of the IDs with their predifined order*/
+    for (i = 0; i < airp_number; i++){
         strcpy(idlist[i], max_air[i].ID);
         ids[i] = i;
     }
-    for (i = 1; i < airp_number; i++)
-    {
-        for (j = 0; j < (airp_number - 1); j++)
-        {
-            if (strcmp(idlist[j], idlist[j + 1]) > 0)
-            {
+    /*Bubble sorte by alphabetical order of the IDs*/
+    for (i = 1; i < airp_number; i++){
+        for (j = 0; j < (airp_number - 1); j++){
+            if (strcmp(idlist[j], idlist[j + 1]) > 0){
                 strcpy(temp, idlist[j]);
                 strcpy(idlist[j], idlist[j + 1]);
                 strcpy(idlist[j + 1], temp);
@@ -110,42 +171,226 @@ void comm_l_empty(int airp_number)
             }
         }
     }
-    for (i = 0; i < airp_number; i++)
-    {
+    /*Prints all the airports and the rest of their struct by alphabetical order*/
+    for (i = 0; i < airp_number; i++){
         x = ids[i];
         printf("%s %s %s %d\n", max_air[x].ID, max_air[x].city, max_air[x].country, max_air[x].flights_number);
     }
 }
 
+void comm_v_list(char new_code[FLIGHTCODEMAX], char ndep_airID[5], char narr_airID[5], int nday, int nmonth, int nyear, int ndep_hour, int ndep_min, int ndur_hour, int ndur_min, int ncap)
+{
+    int i, j, checker1 = 0, checker2 = 0, size;
+    size = strlen(new_code);
+
+    /*Checking if the flight code is correct*/
+    if (size >= 7){
+        printf("invalid flight code\n");
+        return;
+    }
+    for (i = 0; i < 2; i++){
+        if ((isalpha(new_code[i]) && isupper(new_code[i]))){
+            continue;
+        }
+        else{
+            printf("invalid flight code\n");
+            return;
+        }
+    }
+    for (i = 2; i < (size); i++){
+        if (isdigit(new_code[i])){
+            continue;
+        }
+        else{
+            printf("invalid flight code\n");
+            return;
+        }
+    }
+    /*Checking if the correspondent ID of the departure and of the arrival exists*/
+    for (i = 0; i < airp_number; i++){
+        if (strcmp(narr_airID, max_air[i].ID) == 0){
+            checker1 ++;
+        }
+        if (strcmp(ndep_airID, max_air[i].ID) == 0){
+            checker2 ++;
+        }    
+    }
+    if (checker1 == 0){
+        printf("%s: no such airport ID\n", narr_airID);
+        return;
+    }
+    if (checker2 == 0){
+        printf("%s: no such airport ID\n", ndep_airID);
+        return;
+    }
+    /*Verifying if the new flight created will exceed the allowed number of flights 30000*/
+    if (flights_number == FLIGHTLISTMAX){
+        printf("too many flights\n");
+        return;
+    }
+    /*Checking if the date inserted is in the past or if it's more than 1 year after the current day
+    which means i am verifying is the date is valid*/
+    if(invalid_date(nday, nmonth, nyear)){
+        return;
+    }
+    /*Checking if the duration of the flight is valid*/
+    if (ndur_hour < 0 || ndur_hour > 12){
+        printf("invalid duration\n");
+        return;
+    }
+    if (ndur_min < 0 || ndur_min > 59){
+        printf("invalid duration\n");
+        return;
+    }
+    if (ndur_hour == 12 && ndur_min != 0){
+        printf("invalid duration\n");
+        return;
+    }
+    /*Checking if the capacity of the flight inserted is valid*/ 
+    if (!(ncap >= 10 && ncap <= 100)){
+        printf("invalid capacity\n");
+        return;
+    }
+    /*Checking if there are another flight with the same flight code in the same day*/
+    for (i = 0; i < flights_number; i++){
+        if (strcmp((max_flights[i].CODE), new_code) == 0){
+            for (j = 0; j < flights_number; j++){
+                if ((max_flights[j].d_day == nday) && (max_flights[j].d_month == nmonth) && (max_flights[j].d_year == nyear)){
+                    printf("flight already exists\n");
+                    return;
+                }
+            }
+        }
+    }
+    strcpy(max_flights[flights_number].CODE,new_code);
+    strcpy(max_flights[flights_number].ID_dep,ndep_airID);
+    strcpy(max_flights[flights_number].ID_arr,narr_airID);
+    max_flights[flights_number].d_day = nday;
+    max_flights[flights_number].d_month = nmonth;
+    max_flights[flights_number].d_year = nyear;
+    max_flights[flights_number].d_hour = ndep_hour;
+    max_flights[flights_number].d_min = ndep_min;
+    max_flights[flights_number].dur_h = ndur_hour;
+    max_flights[flights_number].dur_min = ndur_min;
+    max_flights[flights_number].capacity = ncap;
+    flights_number++;
+}
+
+void comm_v_empty(int flights_number){
+    int i;
+    /*This command based on the total number of flights will iterate the max_flight array and print 1 by one the flight by the order 
+    previous inserted and his characteristics*/
+    for (i = 0; i < flights_number; i++){
+        printf("%s %s %s %02d-%02d-%d %02d:%02d\n", max_flights[i].CODE, max_flights[i].ID_dep, max_flights[i].ID_arr, max_flights[i].d_day, max_flights[i].d_month, max_flights[i].d_year, max_flights[i].d_hour, max_flights[i].d_min);
+    }
+}
+
+void comm_t(int nday, int nmonth, int nyear){
+    if(!(invalid_date(nday, nmonth, nyear))){
+        iday = nday;
+        imonth = nmonth;
+        iyear = nyear;
+        printf("%02d-%02d-%02d\n", nday, nmonth, nyear);
+    }
+}
+
+void comm_p(char ndep_airID[5]){
+    int i, checker1 = 0;
+    for (i = 0; i < airp_number; i++){
+        if (strcmp(ndep_airID, max_air[i].ID) == 0){
+            checker1 ++;
+        }    
+    }
+    if (checker1 == 0){
+        printf("%s: no such airport ID\n", ndep_airID);
+        return;
+    }
+
+    for (i = 0; i < airp_number; i++){
+        if (strcmp(ndep_airID, max_flights[i].ID_dep) == 0){
+            printf("%s %s %02d-%02d-%d %02d-%02d", max_flights[i].CODE, max_flights[i].ID_arr, max_flights[i].d_day, max_flights[i].d_month, max_flights[i].d_year, max_flights[i].d_hour, max_flights[i].d_min);
+        }
+    }
+}
+
+
+
+/*void flight_ord_arr(int flights_number,struct flight max_flights[FLIGHTLISTMAX],char IDair[]){
+    struct flight temp[FLIGHTLISTMAX];
+    int i, j;
+    for(i=0;i<flights_number-1;i++){
+        for(j=0;j<flights_number-i-1;j++){
+            if(compdates(max_flights[j].d_day,max_flights[j].d_month,max_flights[j].d_year,max_flights[j].d_min,max_flights[j].d_hour,
+                max_flights[j+1].d_day,max_flights[j+1].d_month,max_flights[j+1].d_year,max_flights[j+1].d_min,max_flights[j+1].d_hour)>0){
+                    temp = max_flights[j];
+                    max_flights[j] = max_flights[j+1];
+                    max_flights[j+1] = temp;
+            }
+        }
+    }
+}
+    
+    compdates(max_flights[j].d_day,max_flights[j].d_month,max_flights[j].d_year,max_flights[j].d_min,max_flights[j].d_hour,
+                max_flights[j+1].d_day,max_flights[j+1].d_month,max_flights[j+1].d_year,max_flights[j+1].d_min,max_flights[j+1].d_hour
+    
+    
+   
+    struct flight{
+    char CODE[FLIGHTCODEMAX];
+    char ID_dep[5];
+    char ID_arr[5];
+    int d_day, d_month, d_year;
+    int d_hour, d_min;
+    int dur_h, dur_min;
+    int capacity;
+};*/
+                  
 int main()
 {
     char comm, new_airpID[L_ID] = {0}, new_ctry[L_COUNTRY] = {0}, new_city[L_CITY] = {0};
     char airp_list[AIRPLISTMAX] = {0};
+    char new_code[FLIGHTCODEMAX] = {0}, ndep_airID[5] = {0}, narr_airID[5] = {0};
+    int nday, nmonth, nyear, ndep_hour, ndep_min, ndur_hour, ndur_min, ncap;
 
     while (1)
     {
         scanf("%c", &comm);
-        if (comm == 'q')
-        {
-            exit(0);
-        }
-        if (comm == 'a')
-        {
+        if (comm == 'a'){
             scanf("%s %s %[^\n]", new_airpID, new_ctry, new_city);
             comm_a(new_airpID, new_ctry, new_city);
         }
-        if (comm == 'l')
-        {
+        if (comm == 'l'){
             scanf("%[^\n]", airp_list);
-            if (strlen(airp_list) == 0)
-            {
+            if (strlen(airp_list) == 0){
                 comm_l_empty(airp_number);
             }
-            else
-            {
+            else{
                 comm_l_listed(airp_list, airp_number);
             }
         }
+        if(comm == 'v'){
+            if (getchar() == '\n'){
+                comm_v_empty(flights_number);
+            }
+            else{
+            scanf("%s%s%s%d-%d-%d%d:%d%d:%d%d",new_code,ndep_airID,narr_airID,&nday,&nmonth,&nyear,&ndep_hour,&ndep_min,&ndur_hour,&ndur_min,&ncap);
+            comm_v_list(new_code,ndep_airID,narr_airID,nday,nmonth,nyear,ndep_hour,ndep_min,ndur_hour,ndur_min,ncap);
+            }
+        }
+        if (comm == 'p')
+        {
+            scanf("%s", ndep_airID);
+        }
+            
+        if (comm == 't'){
+            scanf("%d-%d-%d", &nday, &nmonth, &nyear);
+            comm_t(nday, nmonth, nyear);
+        }
+        
+        if (comm == 'q'){
+            exit(0);
+        }
+
     }
     return 0;
 }
